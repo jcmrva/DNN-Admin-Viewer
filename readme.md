@@ -1,6 +1,6 @@
-# DNN Admin Log Viewer
+# DNN Admin Viewer
 
-A small desktop app that watches the DNN admin log while you do other things.
+A small desktop app that watches the DNN event log while you do other things.
 
 ---
 
