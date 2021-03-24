@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Donald" Version="5.1.2" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.2" />
   </ItemGroup>
 
 </Project>

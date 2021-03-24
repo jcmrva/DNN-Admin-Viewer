@@ -2,8 +2,12 @@ module DbSource
 
 open System
 open System.Data
+open System.Data.SqlClient
 open Donald
 
+let sqlConn connStr =
+    new SqlConnection(connStr)
+    
 type EventLogType =
     { LogTypeKey : string
       Name : string
@@ -39,4 +43,14 @@ type EventLog =
       }
 
 
+let testSql =
+    "SELECT 'test' as Test"
+
+let testCmd conn =
+    dbCommand conn {
+        cmdText testSql
+    }
+
+let testResult conn =
+    conn |> testCmd |> DbConn.Async.querySingle (fun rd -> rd.ReadString "Test")
 
