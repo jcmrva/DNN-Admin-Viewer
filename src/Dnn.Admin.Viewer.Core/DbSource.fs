@@ -23,6 +23,22 @@ type EventLogType =
         KeepRecentEntries = rd.ReadInt32 "KeepRecentEntries"
       }
 
+let eventLogTypesQuery conn =
+    dbCommand conn {
+        cmdText "
+            SELECT ELT.LogTypeKey
+              , ELT.LogTypeFriendlyName as Name
+              , ELT.LogTypeOwner as Owner
+              , CAST(case ELC.LoggingIsActive when 1 then 1 else 0 end as bit) as IsActive
+              , CAST(ISNULL(ELC.KeepMostRecent, -1) as int) as KeepRecentEntries
+            FROM dbo.EventLogTypes as ELT
+            LEFT JOIN dbo.EventLogConfig as ELC on ELC.LogTypeKey = ELT.LogTypeKey
+            "
+    }
+let eventLogTypesResult conn =
+    eventLogTypesQuery conn
+    |> DbConn.query EventLogType.fromDataReader
+
 type EventLog =
     { LogGUID : string
       LogTypeKey : string
@@ -42,15 +58,39 @@ type EventLog =
         LogPortalName = rd.ReadString "LogPortalName"
       }
 
+let eventLogSelect = "
+            SELECT LogGUID
+              , LogTypeKey
+              , LogConfigID
+              , LogCreateDate
+              , LogServerName
+              , LogPortalID
+              , LogPortalName
+            FROM dbo.EventLog
+            "
 
-let testSql =
-    "SELECT 'test' as Test"
+let eventLogAllQuery conn =
+    dbCommand conn {
+        cmdText eventLogSelect
+    }
+let eventLogAllResult conn =
+    eventLogAllQuery conn 
+    |> DbConn.query EventLog.fromDataReader
+
+let eventLogNewQuery conn dt =
+    dbCommand conn {
+        cmdText $"{eventLogSelect} WHERE LogCreateDate >= @dt"
+        cmdParam [ "dt", SqlType.DateTime dt ]
+    }
+let eventLogNewResult conn dt =
+    eventLogNewQuery conn dt 
+    |> DbConn.query EventLog.fromDataReader
+
 
 let testCmd conn =
     dbCommand conn {
-        cmdText testSql
+        cmdText "SELECT 'test' as Test"
     }
 
 let testResult conn =
-    conn |> testCmd |> DbConn.Async.querySingle (fun rd -> rd.ReadString "Test")
-
+    conn |> testCmd |> DbConn.querySingle (fun rd -> rd.ReadString "Test")
