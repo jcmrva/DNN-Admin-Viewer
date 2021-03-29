@@ -3,7 +3,7 @@
 
 #r "../src/Dnn.Admin.Viewer.Core/bin/Debug/net5.0/publish/Dnn.Admin.Viewer.Core.dll"
 #r "nuget: System.Data.SqlClient, 4.8.2"
-#r "nuget: Donald, 5.1.2"
+#r "nuget: Donald, 5.1.3"
 
 open DbSource
 open System.Data.SqlClient
