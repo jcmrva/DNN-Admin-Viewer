@@ -9,12 +9,11 @@ A small desktop app that watches the DNN event log while you do other things.
 - Requires .NET 5.0 SDK or greater.
 
 ```
-cd src
 dotnet build
 ```
 
 ```
-dotnet run -p Dnn.Admin.Viewer
+dotnet run -p src\Dnn.Admin.Viewer
 ```
 
 ## Key Dependencies

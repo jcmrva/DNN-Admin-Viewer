@@ -6,6 +6,7 @@
   <ItemGroup>
     <Compile Include="Settings.fs" />
     <Compile Include="Summary.fs" />
+    <Compile Include="Server.fs" />
     <Compile Include="Shell.fs" />
     <Compile Include="Program.fs" />
     <AvaloniaResource Include="**\*.xaml" />

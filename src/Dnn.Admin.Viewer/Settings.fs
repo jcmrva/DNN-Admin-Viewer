@@ -6,6 +6,7 @@ open Avalonia.FuncUI.Types
 open Avalonia.Controls
 open Avalonia.Layout
 open Avalonia.FuncUI.DSL
+open System
 
 type SidebarPosition = | Left | Right
 
@@ -14,7 +15,8 @@ type Model =
     }
 
 type Msg = 
-    FlipSidebar
+    | FlipSidebar
+    | AddServer of name:string
 
 let init = 
     { SidebarPosn = Left }, Cmd.none
@@ -25,6 +27,8 @@ let update (msg: Msg) (model: Model) =
         let posn = if model.SidebarPosn = Left then Right else Left
         { model with SidebarPosn = posn }
         , Cmd.none
+    
+    | _ -> model, Cmd.none
 
 let view model dispatch =
     DockPanel.create [
@@ -37,10 +41,11 @@ let view model dispatch =
                     Button.create [
                         Button.onClick (fun _ -> dispatch FlipSidebar)
                         Button.content "toggle sidebar"
-                    ]         
-                    TextBlock.create [
-                        TextBlock.text (sprintf "%A" model.SidebarPosn)
-                    ]               
+                    ]
+                    Button.create [
+                        Button.onClick (fun _ -> dispatch (AddServer $"Test {DateTime.Now.Millisecond}"))
+                        Button.content "Add Server"
+                    ]
                 ]
             ]
         ]
