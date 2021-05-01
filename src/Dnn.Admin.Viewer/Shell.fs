@@ -17,6 +17,7 @@ type Model =
     { summary : Summary.Model
       settings : Settings.Model
       servers : Map<string, SourceServer option>
+      log : string list
     }
 
 type Msg =
@@ -30,20 +31,19 @@ let init =
     let settings, _ = Settings.init
     let summary, _ = Summary.init
 
-    { summary = summary; settings = settings; servers = Map.empty },
+    { summary = summary; settings = settings; servers = Map.empty; log = [ "start" ]; },
     Cmd.none
 
 let update (msg: Msg) (model: Model): Model * Cmd<_> =
     match msg with
-    | SettingsMsg (Settings.AddServer n) ->
-        let s = 
-            match model.servers |> Map.tryFind n with
-            | Some _ ->                
-                model.servers
-            | None ->
-                Map.add n None model.servers
-
-        { model with servers = s }, Cmd.none
+    | SettingsMsg (Settings.AddServer) ->
+        let n = model.settings.NewServerName
+        match model.servers |> Map.tryFind n with
+        | Some _ ->
+            { model with log = $"{n} already exists."::model.log }
+        | None ->
+            { model with servers = (Map.add n None model.servers) }
+        , Cmd.none
     | SettingsMsg msg ->
         let m, _ =
             Settings.update msg model.settings
@@ -61,6 +61,20 @@ let update (msg: Msg) (model: Model): Model * Cmd<_> =
     | _ -> 
         model, Cmd.none
 
+let logView log _ =
+    let logentry e =
+        TextBlock.create [ TextBlock.text e ] :> IView
+    DockPanel.create [
+        DockPanel.children [
+            StackPanel.create [
+                StackPanel.dock Dock.Bottom
+                StackPanel.margin 5.0
+                StackPanel.spacing 5.0
+                StackPanel.children (List.map logentry log)
+            ]
+        ]
+    ]
+
 
 let view (state: Model) dispatch =
     
@@ -76,7 +90,7 @@ let view (state: Model) dispatch =
     let serverTab (name:string) =
         let servModel = 
             state.servers |> Map.find name |> fun s -> (name, s)
-        TabItem' [                            
+        TabItem' [
             TabItem.header name
             TabItem.content (Server.view servModel (ServerMsg >> dispatch)) 
         ]
@@ -85,20 +99,24 @@ let view (state: Model) dispatch =
         state.servers |> Map.toList |> List.map (fst >> serverTab)
 
     let tabs =
-            [
-                TabItem' [
-                    TabItem.header "Summary"
-                    TabItem.content (Summary.view state.summary (SummaryMsg >> dispatch)) 
-                ]
-                TabItem' [
-                    TabItem.verticalAlignment VerticalAlignment.Bottom
-                    TabItem.header "Settings"
-                    TabItem.content (Settings.view state.settings (SettingsMsg >> dispatch)) 
-                ]
+        [
+            TabItem' [
+                TabItem.header "Summary"
+                TabItem.content (Summary.view state.summary (SummaryMsg >> dispatch)) 
             ]
-            |> List.append serverTabs
+            TabItem' [
+                //TabItem.verticalAlignment VerticalAlignment.Bottom
+                TabItem.header "Settings"
+                TabItem.content (Settings.view state.settings (SettingsMsg >> dispatch)) 
+            ]
+            TabItem' [
+                TabItem.header "Log"
+                TabItem.content (logView state.log (fun _ -> ()))
+            ]
+        ]
+        |> fun t -> List.append t serverTabs
 
-    let tabCtrl = 
+    let tabCtrl =
         TabControl.create [
             TabControl.tabStripPlacement dockPosition
             TabControl.viewItems tabs

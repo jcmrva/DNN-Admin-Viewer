@@ -12,14 +12,17 @@ type SidebarPosition = | Left | Right
 
 type Model =
     { SidebarPosn : SidebarPosition
+      NewServerName : string
     }
 
-type Msg = 
+type Msg =
     | FlipSidebar
-    | AddServer of name:string
+    | AddServer
+    | ServerName of string
 
-let init = 
-    { SidebarPosn = Left }, Cmd.none
+let init =
+    { SidebarPosn = Left; NewServerName = ""; }
+    , Cmd.none
 
 let update (msg: Msg) (model: Model) =
     match msg with
@@ -27,7 +30,9 @@ let update (msg: Msg) (model: Model) =
         let posn = if model.SidebarPosn = Left then Right else Left
         { model with SidebarPosn = posn }
         , Cmd.none
-    
+    | ServerName n ->
+        { model with NewServerName = n }
+        , Cmd.none
     | _ -> model, Cmd.none
 
 let view model dispatch =
@@ -40,11 +45,18 @@ let view model dispatch =
                 StackPanel.children [
                     Button.create [
                         Button.onClick (fun _ -> dispatch FlipSidebar)
-                        Button.content "toggle sidebar"
+                        Button.content "Toggle Sidebar"
                     ]
                     Button.create [
-                        Button.onClick (fun _ -> dispatch (AddServer $"Test {DateTime.Now.Millisecond}"))
+                        Button.onClick
+                            (fun _ -> AddServer |> dispatch)
                         Button.content "Add Server"
+                    ]
+                    TextBox.create [
+                        TextBox.maxLength 20
+                        TextBox.text model.NewServerName
+                        TextBox.onTextChanged
+                            (ServerName >> dispatch)
                     ]
                 ]
             ]
