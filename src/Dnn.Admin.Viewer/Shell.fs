@@ -17,22 +17,22 @@ type Model =
     { summary : Summary.Model
       settings : Settings.Model
       servers : Map<string, SourceServer option>
-      log : string list
+      log : Log.Model
     }
 
 type Msg =
     | SettingsMsg of Settings.Msg
     | SummaryMsg of Summary.Msg
     | ServerMsg of Server.Msg * name:string
-
-
+    | LogMsg of Log.Msg
 
 let init =
     let settings, _ = Settings.init
     let summary, _ = Summary.init
+    let log = Log.init
 
-    { summary = summary; settings = settings; servers = Map.empty; log = [ "start" ]; },
-    Cmd.none
+    { summary = summary; settings = settings; servers = Map.empty; log = fst log; },
+    [ LogMsg (snd log) ] |> List.map Cmd.ofMsg |> Cmd.batch
 
 let update (msg: Msg) (model: Model): Model * Cmd<_> =
     match msg with
@@ -40,10 +40,11 @@ let update (msg: Msg) (model: Model): Model * Cmd<_> =
         let n = model.settings.NewServerName
         match model.servers |> Map.tryFind n with
         | Some _ ->
-            { model with log = $"{n} already exists."::model.log }
+            model
+            , Cmd.ofMsg (LogMsg <| Log.ServerAlreadyExists n)
         | None ->
             { model with servers = (Map.add n None model.servers) }
-        , Cmd.none
+            , Cmd.ofMsg (LogMsg <| Log.ServerTabAdded n)
     | SettingsMsg msg ->
         let m, _ =
             Settings.update msg model.settings
@@ -58,60 +59,48 @@ let update (msg: Msg) (model: Model): Model * Cmd<_> =
 
         { model with servers = s }
         , Cmd.none
+    | LogMsg msg ->
+        { model with log = (Log.update msg model.log) }, Cmd.none
     | _ -> 
         model, Cmd.none
 
-let logView log _ =
-    let logentry e =
-        TextBlock.create [ TextBlock.text e ] :> IView
-    DockPanel.create [
-        DockPanel.children [
-            StackPanel.create [
-                StackPanel.dock Dock.Bottom
-                StackPanel.margin 5.0
-                StackPanel.spacing 5.0
-                StackPanel.children (List.map logentry log)
-            ]
-        ]
-    ]
 
-
-let view (state: Model) dispatch =
+let view (model: Model) dispatch =
     
     let TabItem' attr =
         TabItem.create attr :> IView // for TabControl.create compat
 
     let dockPosition =
-        if state.settings.SidebarPosn = Settings.Left then
+        if model.settings.SidebarPosn = Settings.Left then
             Dock.Left
         else
             Dock.Right
 
     let serverTab (name:string) =
         let servModel = 
-            state.servers |> Map.find name |> fun s -> (name, s)
+            model.servers |> Map.find name |> fun s -> (name, s)
         TabItem' [
             TabItem.header name
             TabItem.content (Server.view servModel (ServerMsg >> dispatch)) 
         ]
 
     let serverTabs =
-        state.servers |> Map.toList |> List.map (fst >> serverTab)
+        model.servers |> Map.toList |> List.map (fst >> serverTab)
 
     let tabs =
         [
             TabItem' [
                 TabItem.header "Summary"
-                TabItem.content (Summary.view state.summary (SummaryMsg >> dispatch)) 
+                TabItem.content (Summary.view model.summary (SummaryMsg >> dispatch)) 
             ]
             TabItem' [
                 //TabItem.verticalAlignment VerticalAlignment.Bottom
                 TabItem.header "Settings"
-                TabItem.content (Settings.view state.settings (SettingsMsg >> dispatch)) 
+                TabItem.content (Settings.view model.settings (SettingsMsg >> dispatch)) 
             ]
             TabItem' [
                 TabItem.header "Log"
-                TabItem.content (logView state.log (fun _ -> ()))
+                TabItem.content (Log.view model.log)
             ]
         ]
         |> fun t -> List.append t serverTabs
