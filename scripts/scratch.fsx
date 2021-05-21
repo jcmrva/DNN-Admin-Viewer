@@ -1,7 +1,7 @@
 // from the project root, first make sure Core is compiled with dependencies
-// dotnet publish .\src\Dnn.Admin.Viewer.Core\
+// dotnet publish .\src\Dnn.Admin.Core\
 
-#r "../src/Dnn.Admin.Viewer.Core/bin/Debug/net5.0/publish/Dnn.Admin.Viewer.Core.dll"
+#r "../src/Dnn.Admin.Core/bin/Debug/net5.0/publish/Dnn.Admin.Core.dll"
 #r "nuget: System.Data.SqlClient, 4.8.2"
 #r "nuget: Donald, 5.1.3"
 
