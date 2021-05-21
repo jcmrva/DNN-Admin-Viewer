@@ -7,6 +7,7 @@
     <Compile Include="Settings.fs" />
     <Compile Include="Summary.fs" />
     <Compile Include="Server.fs" />
+    <Compile Include="Servers.fs" />
     <Compile Include="Log.fs" />
     <Compile Include="Shell.fs" />
     <Compile Include="Program.fs" />
@@ -22,6 +23,6 @@
     <EmbeddedResource Remove=".template.config\**" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Dnn.Admin.Viewer.Core\Dnn.Admin.Viewer.Core.fsproj" />
+    <ProjectReference Include="..\Dnn.Admin.Core\Dnn.Admin.Core.fsproj" />
   </ItemGroup>
 </Project>

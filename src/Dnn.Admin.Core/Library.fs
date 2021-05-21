@@ -9,7 +9,7 @@ type ServerActive =
 
 type SourceServer =
     { Name : string
-      ConnStr : string
+      ConnStr : string option
       LastAccessed : DateTime option
       Active : ServerActive
     }
@@ -18,8 +18,8 @@ type SourceServer =
 [<Measure>] type second
 
 type Refresh =
-    | Interval of int<second>
-    | Backoff
+    | Interval of time:int<second>
+    | Backoff of time:int<second> * exp:int
 
 type Notification =
     | DontBotherMe
